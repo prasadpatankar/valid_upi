@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPI Handle Request Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #3B82F6;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .username-row {
+            transition: all 0.3s ease;
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }        .input-error {
+            border-color: #EF4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+        .error-field {
+            border-color: #EF4444 !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+        }
+        .input-success {
+            border-color: #10B981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        .upi-id-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 2px solid #4f46e5;
+        }        .username-generation-buttons {
+            margin-top: 0.5rem;
+        }
+        .username-generation-buttons button {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            border-radius: 0.25rem;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .generate-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .generate-btn:hover {
+            background-color: #2d5a27;
+        }
+        .reset-btn, .longer-btn {
+            background-color: #6B7280;
+            color: white;
+        }
+        .reset-btn:hover, .longer-btn:hover {
+            background-color: #374151;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-700 via-blue-800 to-gray-900 min-h-screen p-4 selection:bg-blue-500 selection:text-white">
+
+    <div class="w-full max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="bg-white shadow-2xl rounded-xl overflow-hidden mb-6">
+            <div class="bg-blue-600 p-6 text-white">
+                <h1 class="text-3xl font-bold text-center">UPI Handle Request Portal</h1>
+                <p class="text-center text-blue-200 mt-1">SEBI Registered Intermediaries - Request New UPI Handles</p>
+            </div>
+        </div>
+
+        <!-- Main Form -->
+        <div class="bg-white shadow-2xl rounded-xl overflow-hidden">
+            <form id="upiRequestForm" class="p-6 space-y-6">                <!-- Entity Information Section -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h2 class="text-xl font-semibold text-blue-700 mb-4">Entity Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div>
+                            <label for="entityName" class="block text-sm font-medium text-gray-700 mb-2">
+                                Entity Name <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" id="entityName" name="entityName" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Enter entity name">
+                        </div>
+                        <div>
+                            <label for="registrationNumber" class="block text-sm font-medium text-gray-700 mb-2">
+                                Registration Number <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" id="registrationNumber" name="registrationNumber" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="e.g., INZ000012345">
+                        </div>
+                        <div>
+                            <label for="panNumber" class="block text-sm font-medium text-gray-700 mb-2">
+                                PAN Number <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" id="panNumber" name="panNumber" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="e.g., ABCDE1234F" maxlength="10" pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}"
+                                title="Enter valid PAN format (5 letters, 4 digits, 1 letter)">
+                        </div>
+                        <div>
+                            <label for="categoryCode" class="block text-sm font-medium text-gray-700 mb-2">
+                                Category Code <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" id="categoryCode" name="categoryCode" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Enter category code"
+                                oninput="updateAllUpiPreviews()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trade Name Toggle Section -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h2 class="text-xl font-semibold text-blue-700 mb-4">Trade Name Configuration</h2>
+                    <div class="flex items-center space-x-4 mb-4">
+                        <label class="text-sm font-medium text-gray-700">Use Trade Name as Username:</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="useTradeNameToggle">
+                            <span class="slider"></span>
+                        </label>
+                        <span id="toggleLabel" class="text-sm font-medium text-gray-600">No</span>
+                    </div>
+                    
+                    <!-- Trade Name Fields (Initially Hidden) -->
+                    <div id="tradeNameFields" class="hidden space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="tradeName" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Registered Trademark Name <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" id="tradeName" name="tradeName"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Enter trademark name (min. 6 characters)">
+                                <p class="text-xs text-gray-500 mt-1">Minimum 6 characters, can include special characters like /</p>
+                            </div>
+                            <div>
+                                <label for="trademarkRegNumber" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Trademark Registration Number <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" id="trademarkRegNumber" name="trademarkRegNumber"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Enter trademark registration number">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UPI Handle Requests Section -->
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-blue-700">UPI Handle Requests</h2>
+                        <button type="button" id="addRowButton" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Add More
+                        </button>
+                    </div>
+                    
+                    <div id="usernameRowsContainer" class="space-y-4">
+                        <!-- Initial row will be added by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-center pt-6 border-t border-gray-200">
+                    <button type="submit" 
+                        class="px-8 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500">
+                        Submit UPI Handle Request
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white py-3 px-5 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 z-50">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Global state
+            let upiHandles = [];
+            let rowCounter = 0;
+            let existing_username = []; // To be populated later
+            let bankUsernames = {}; // Track usernames per bank
+            let rowUsernameState = {}; // Track username generation state per row
+            
+            // Username generation functions
+            function cleanWord(word) {
+                return word.toLowerCase().replace(/[^a-z0-9]/g, '');
+            }
+            
+            function getSourceName() {
+                const useTradeNameToggle = document.getElementById('useTradeNameToggle');
+                if (useTradeNameToggle.checked) {
+                    return document.getElementById('tradeName').value.trim();
+                } else {
+                    return document.getElementById('entityName').value.trim();
+                }
+            }
+            
+            function isUsernameAvailable(username, bankCode) {
+                // Check against existing_username array
+                if (existing_username.includes(username)) {
+                    return false;
+                }
+                
+                // Check against bank-specific usernames
+                if (bankUsernames[bankCode] && bankUsernames[bankCode].includes(username)) {
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            function generateUniqueUsername(baseUsername, bankCode) {
+                if (isUsernameAvailable(baseUsername, bankCode)) {
+                    return baseUsername;
+                }
+                
+                // Generate incremental 3-digit number
+                let counter = 1;
+                let uniqueUsername = baseUsername + counter.toString().padStart(3, '0');
+                
+                while (!isUsernameAvailable(uniqueUsername, bankCode)) {
+                    counter++;
+                    uniqueUsername = baseUsername + counter.toString().padStart(3, '0');
+                    
+                    // Prevent infinite loop
+                    if (counter > 999) {
+                        break;
+                    }
+                }
+                
+                return uniqueUsername;
+            }
+            
+            function registerUsername(username, bankCode) {
+                if (!bankUsernames[bankCode]) {
+                    bankUsernames[bankCode] = [];
+                }
+                bankUsernames[bankCode].push(username);
+            }
+            
+            function generateUsernameForRow(rowId) {
+                const sourceName = getSourceName();
+                if (!sourceName) {
+                    showToast('Please enter entity name or trademark name first', 'error');
+                    return;
+                }
+                
+                const row = document.getElementById(rowId);
+                const ifscInput = row.querySelector('.ifsc-input');
+                const bankCode = ifscInput.value.substring(0, 4);
+                
+                if (!bankCode || bankCode.length !== 4) {
+                    showToast('Please enter valid IFSC code first', 'error');
+                    return;
+                }
+                
+                const words = sourceName.split(' ').filter(word => word.trim() !== '');
+                rowUsernameState[rowId] = {
+                    words: words,
+                    currentWordCount: 0
+                };
+                
+                let username = '';
+                while (rowUsernameState[rowId].currentWordCount < words.length) {
+                    const newUsername = username + cleanWord(words[rowUsernameState[rowId].currentWordCount]);
+                    if (newUsername.length > 24) break;
+                    username = newUsername;
+                    rowUsernameState[rowId].currentWordCount++;
+                    if (username.length >= 5) break;
+                }
+                
+                if (username.length < 5) {
+                    showToast('Generated username too short (min 5 characters required)', 'error');
+                    return;
+                }
+                
+                // Generate unique username for this bank
+                const uniqueUsername = generateUniqueUsername(username, bankCode);
+                registerUsername(uniqueUsername, bankCode);
+                
+                const usernameInput = row.querySelector('.username-input');
+                usernameInput.value = uniqueUsername;
+                
+                // Update UPI preview
+                updateUpiPreview(row);
+            }
+            
+            function resetUsernameForRow(rowId) {
+                generateUsernameForRow(rowId);
+            }
+            
+            function generateLongerForRow(rowId) {
+                const state = rowUsernameState[rowId];
+                if (!state || state.currentWordCount >= state.words.length) {
+                    return;
+                }
+                
+                const row = document.getElementById(rowId);
+                const ifscInput = row.querySelector('.ifsc-input');
+                const bankCode = ifscInput.value.substring(0, 4);
+                
+                let username = '';
+                for (let i = 0; i <= state.currentWordCount; i++) {
+                    username += cleanWord(state.words[i]);
+                }
+                
+                if (username.length <= 24) {
+                    state.currentWordCount++;
+                    
+                    // Generate unique username for this bank
+                    const uniqueUsername = generateUniqueUsername(username, bankCode);
+                    registerUsername(uniqueUsername, bankCode);
+                    
+                    const usernameInput = row.querySelector('.username-input');
+                    usernameInput.value = uniqueUsername;
+                    
+                    // Update UPI preview
+                    updateUpiPreview(row);
+                }
+            }
+            
+            // Load UPI handles from XML
+            async function loadUpiHandles() {
+                try {
+                    // Directly use the XML data from the variable.
+                    const xmlText = upiHandlesXmlData;
+
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(xmlText, "application/xml");
+                    
+                    if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
+                        throw new Error("Error parsing XML file");
+                    }
+                      const listNodes = xmlDoc.querySelectorAll('list');
+                    upiHandles = Array.from(listNodes).map(node => ({
+                        bank: node.querySelector('bank')?.textContent || '',
+                        handle: node.querySelector('handle')?.textContent || '',
+                        full_bank_name: node.querySelector('full_bank_name')?.textContent || ''
+                    }));
+                    
+                    console.log('Loaded UPI handles:', upiHandles);
+                    
+                } catch (error) {
+                    console.error('Error loading UPI handles:', error);
+                    showToast('Error loading UPI handles. Please check if UPI_handles.xml is available.');
+                }            }
+            
+            // IFSC validation
+            function validateIFSC(ifsc) {
+                if (ifsc.length !== 11) return false;
+                
+                // First 4 characters should be alphabets
+                const bankCode = ifsc.substring(0, 4);
+                if (!/^[A-Z]{4}$/.test(bankCode)) return false;
+                
+                // Fifth character can be numeric or alphabet
+                const fifthChar = ifsc.charAt(4);
+                if (!/^[A-Z0-9]$/.test(fifthChar)) return false;
+                
+                // Remaining 6 characters should be numeric
+                const branchCode = ifsc.substring(5);
+                if (!/^[0-9]{6}$/.test(branchCode)) return false;
+                
+                return true;
+            }
+            
+            // PAN validation
+            function validatePAN(pan) {
+                if (pan.length !== 10) return false;
+                
+                // PAN format: 5 alphabets, 4 digits, 1 alphabet
+                const pattern = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+                return pattern.test(pan);
+            }            // Get available handles for bank code (IFSC based)
+            function getHandlesForBank(bankCode) {
+                return upiHandles.filter(handle => 
+                    handle.bank.toLowerCase() === bankCode.toLowerCase()
+                ).map(h => h.handle);
+            }
+
+            // Get available handles for bank name (Payment Service Provider based)
+            function getHandlesForBankName(bankName) {
+                return upiHandles.filter(handle => 
+                    handle.full_bank_name === bankName
+                ).map(h => h.handle);
+            }
+
+            // Get unique bank names for Payment Service Provider dropdown
+            function getUniqueBankNames() {
+                const bankNames = upiHandles.map(h => h.full_bank_name).filter(name => name);
+                return [...new Set(bankNames)].sort();
+            }
+
+            // Update all UPI previews when category code changes
+            window.updateAllUpiPreviews = function() {
+                const rows = document.querySelectorAll('.username-row');
+                rows.forEach(row => {
+                    updateUpiPreview(row);
+                });
+            }            // Update UPI preview for a specific row
+            function updateUpiPreview(row) {
+                const usernameInput = row.querySelector('.username-input');
+                const optionalParamInput = row.querySelector('.optional-param-input');
+                const enableOptionalCheckbox = row.querySelector('.enable-optional-checkbox');
+                const handleSelect = row.querySelector('.handle-select');
+                const previewDiv = row.querySelector('.preview-upi');
+                const categoryCodeInput = document.getElementById('categoryCode');
+                
+                const username = usernameInput.value.trim();
+                const optionalParam = enableOptionalCheckbox.checked ? optionalParamInput.value.trim() : '';
+                const handle = handleSelect.value;
+                const categoryCode = categoryCodeInput.value.trim();
+                
+                if (username && handle && categoryCode) {
+                    // Build UPI ID: username[.optional].category.handle
+                    let fullUpiId = username;
+                    if (optionalParam) {
+                        fullUpiId += '.' + optionalParam;
+                    }
+                    fullUpiId += '.' + categoryCode + handle;
+                    
+                    previewDiv.innerHTML = `<strong>Complete UPI ID:</strong> ${fullUpiId}`;
+                    previewDiv.classList.remove('hidden');
+                } else {
+                    previewDiv.classList.add('hidden');
+                }
+            }
+            
+            // Create username row
+            function createUsernameRow(rowIndex, copyFromPrevious = false) {
+                const rowId = `row-${rowIndex}`;
+                let usernameValue = '';
+                let accountNumber = '';
+                let ifscValue = '';
+                
+                if (copyFromPrevious && rowIndex > 0) {
+                    const prevRow = document.querySelector(`#row-${rowIndex - 1}`);
+                    if (prevRow) {
+                        const prevUsername = prevRow.querySelector('.username-input').value;
+                        const prevAccount = prevRow.querySelector('.account-input').value;
+                        const prevIfsc = prevRow.querySelector('.ifsc-input').value;
+                        
+                        // Add 3-digit suffix to username for uniqueness (starting from second row)
+                        const suffix = String(rowIndex).padStart(3, '0');
+                        usernameValue = prevUsername ? `${prevUsername}${suffix}` : '';
+                        accountNumber = prevAccount;
+                        ifscValue = prevIfsc;
+                    }
+                }
+                
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'username-row border border-gray-200 rounded-lg p-4 fade-in';
+                rowDiv.id = rowId;
+                
+                rowDiv.innerHTML = `
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-medium text-gray-700">UPI Handle Request #${rowIndex + 1}</h3>
+                        ${rowIndex > 0 ? `
+                            <button type="button" onclick="removeRow('${rowId}')" 
+                                class="text-red-600 hover:text-red-800 font-medium p-2 rounded hover:bg-red-50">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        ` : ''}
+                    </div>                      <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-12 gap-4 mb-4">                        <div class="lg:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Username <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" required
+                                class="username-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Enter username" value="${usernameValue}">                            <div class="username-generation-buttons mt-2">
+                                <div class="grid grid-cols-2 gap-1 mb-1">
+                                    <button type="button" class="generate-btn" onclick="generateUsernameForRow('${rowId}')">Generate</button>
+                                    <button type="button" class="longer-btn" onclick="generateLongerForRow('${rowId}')">Longer</button>
+                                </div>
+                                <div class="flex justify-center">
+                                    <button type="button" class="reset-btn" onclick="resetUsernameForRow('${rowId}')">Reset</button>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">This will be used in UPI ID</p>
+                        </div>
+                        
+                        <div class="lg:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Optional Parameter
+                            </label>
+                            <input type="text"
+                                class="optional-param-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                placeholder="Enter optional parameter" disabled>
+                            <div class="flex items-center mt-2">
+                                <input type="checkbox" class="enable-optional-checkbox mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label class="text-sm text-gray-600">Enable</label>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Optional parameter for UPI ID customization</p>
+                        </div>
+
+                        <div class="lg:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                PSP
+                            </label>
+                            <select
+                                class="psp-select w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                disabled>
+                                <option value="">Select bank name</option>
+                            </select>
+                            <div class="flex items-center mt-2">
+                                <input type="checkbox" class="enable-psp-checkbox mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label class="text-sm text-gray-600">Use Payment Service Provider (PSP)</label>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Select bank name to populate handles</p>
+                        </div>
+                        
+                        <div class="lg:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Account Number <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" required
+                                class="account-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Enter account number" value="${accountNumber}">
+                        </div>
+                        
+                        <div class="lg:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                IFSC Code <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" required maxlength="11"
+                                class="ifsc-input w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="11-char IFSC" value="${ifscValue}"
+                                oninput="handleIFSCInput(this, '${rowId}')">
+                            <div class="ifsc-error text-red-500 text-xs mt-1 hidden"></div>
+                            <div class="ifsc-success text-green-600 text-xs mt-1 hidden"></div>
+                        </div>
+                        
+                        <div class="lg:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                UPI Handle <span class="text-red-500">*</span>
+                            </label>
+                            <select required
+                                class="handle-select w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                disabled>
+                                <option value="">Enter IFSC first</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-upi upi-id-display text-sm hidden"></div>
+                `;                  // Add event listeners for UPI preview updates
+                const usernameInput = rowDiv.querySelector('.username-input');
+                const optionalParamInput = rowDiv.querySelector('.optional-param-input');
+                const enableOptionalCheckbox = rowDiv.querySelector('.enable-optional-checkbox');
+                const pspSelect = rowDiv.querySelector('.psp-select');
+                const enablePspCheckbox = rowDiv.querySelector('.enable-psp-checkbox');
+                const handleSelect = rowDiv.querySelector('.handle-select');
+                
+                usernameInput.addEventListener('input', () => updateUpiPreview(rowDiv));
+                handleSelect.addEventListener('change', () => updateUpiPreview(rowDiv));
+                optionalParamInput.addEventListener('input', () => updateUpiPreview(rowDiv));
+                
+                // Handle optional parameter checkbox
+                enableOptionalCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        optionalParamInput.disabled = false;
+                        optionalParamInput.focus();
+                    } else {
+                        optionalParamInput.disabled = true;
+                        optionalParamInput.value = '';
+                    }
+                    updateUpiPreview(rowDiv);
+                });
+
+                // Handle Payment Service Provider checkbox and dropdown
+                enablePspCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        pspSelect.disabled = false;
+                        // Populate bank names in dropdown
+                        const bankNames = getUniqueBankNames();
+                        pspSelect.innerHTML = '<option value="">Select bank name</option>' +
+                            bankNames.map(name => `<option value="${name}">${name}</option>`).join('');
+                        pspSelect.focus();
+                        
+                        // Update handle dropdown message
+                        handleSelect.innerHTML = '<option value="">Select bank name first</option>';
+                        handleSelect.disabled = true;
+                    } else {
+                        pspSelect.disabled = true;
+                        pspSelect.value = '';
+                        // Reset to IFSC-based logic
+                        const ifscInput = rowDiv.querySelector('.ifsc-input');
+                        handleIFSCInput(ifscInput, rowDiv.id);
+                    }
+                    updateUpiPreview(rowDiv);
+                });
+
+                // Handle Payment Service Provider selection
+                pspSelect.addEventListener('change', function() {
+                    const selectedBankName = this.value;
+                    if (selectedBankName) {
+                        const availableHandles = getHandlesForBankName(selectedBankName);
+                        if (availableHandles.length > 0) {
+                            handleSelect.innerHTML = '<option value="">Select handle</option>' +
+                                availableHandles.map(handle => 
+                                    `<option value="${handle}">${handle}</option>`
+                                ).join('');
+                            handleSelect.disabled = false;
+                        } else {
+                            handleSelect.innerHTML = '<option value="">No handles available</option>';
+                            handleSelect.disabled = true;
+                        }
+                    } else {                        handleSelect.innerHTML = '<option value="">Select bank name first</option>';
+                        handleSelect.disabled = true;
+                    }
+                    updateUpiPreview(rowDiv);
+                });
+                
+                return rowDiv;
+            }
+            
+            // Make functions global for onclick handlers
+            window.generateUsernameForRow = generateUsernameForRow;
+            window.resetUsernameForRow = resetUsernameForRow;
+            window.generateLongerForRow = generateLongerForRow;
+              // Handle IFSC input and validation
+            window.handleIFSCInput = function(input, rowId) {
+                const row = document.getElementById(rowId);
+                const handleSelect = row.querySelector('.handle-select');
+                const errorDiv = row.querySelector('.ifsc-error');
+                const successDiv = row.querySelector('.ifsc-success');
+                const enablePspCheckbox = row.querySelector('.enable-psp-checkbox');
+                let ifscValue = input.value.toUpperCase();
+                
+                // Remove any non-alphanumeric characters
+                ifscValue = ifscValue.replace(/[^A-Z0-9]/g, '');
+                input.value = ifscValue;
+                
+                // Clear previous messages
+                errorDiv.classList.add('hidden');
+                successDiv.classList.add('hidden');
+                input.classList.remove('input-error', 'input-success');
+                
+                // If Payment Service Provider is enabled, don't update handle dropdown from IFSC
+                if (enablePspCheckbox.checked) {
+                    return; // PSP mode - handles are populated from bank name selection
+                }
+                
+                // Reset handle dropdown
+                handleSelect.innerHTML = '<option value="">Enter IFSC first</option>';
+                handleSelect.disabled = true;
+                
+                // Clear UPI preview when IFSC changes
+                updateUpiPreview(row);
+                
+                if (ifscValue.length === 11) {
+                    if (validateIFSC(ifscValue)) {
+                        const bankCode = ifscValue.substring(0, 4);
+                        const availableHandles = getHandlesForBank(bankCode);
+                        
+                        if (availableHandles.length > 0) {
+                            handleSelect.innerHTML = '<option value="">Select handle</option>' +
+                                availableHandles.map(handle => 
+                                    `<option value="${handle}">${handle}</option>`
+                                ).join('');
+                            handleSelect.disabled = false;
+                            input.classList.add('input-success');
+                            successDiv.textContent = `✓ Valid IFSC. Found ${availableHandles.length} handle(s) for ${bankCode}`;
+                            successDiv.classList.remove('hidden');
+                        } else {
+                            input.classList.add('input-error');
+                            errorDiv.textContent = `No UPI handles available for bank code: ${bankCode}`;
+                            errorDiv.classList.remove('hidden');
+                        }
+                    } else {
+                        input.classList.add('input-error');
+                        errorDiv.textContent = 'Invalid IFSC format. First 4: alphabets, 5th: alphanumeric, last 6: numeric';
+                        errorDiv.classList.remove('hidden');
+                    }
+                } else if (ifscValue.length > 0) {
+                    // Partial validation feedback
+                    const bankCode = ifscValue.substring(0, Math.min(4, ifscValue.length));
+                    if (ifscValue.length <= 4) {
+                        if (!/^[A-Z]*$/.test(bankCode)) {
+                            input.classList.add('input-error');
+                            errorDiv.textContent = 'First 4 characters must be alphabets';
+                            errorDiv.classList.remove('hidden');
+                        }
+                    } else if (ifscValue.length === 5) {
+                        if (!/^[A-Z0-9]$/.test(ifscValue.charAt(4))) {
+                            input.classList.add('input-error');
+                            errorDiv.textContent = '5th character must be alphanumeric';
+                            errorDiv.classList.remove('hidden');
+                        }
+                    } else if (ifscValue.length > 5) {
+                        const remainingChars = ifscValue.substring(5);
+                        if (!/^[0-9]*$/.test(remainingChars)) {
+                            input.classList.add('input-error');
+                            errorDiv.textContent = 'Characters 6-11 must be numeric';
+                            errorDiv.classList.remove('hidden');
+                        }
+                    }
+                }
+            };
+            
+            // Remove row
+            window.removeRow = function(rowId) {
+                const row = document.getElementById(rowId);
+                if (row) {
+                    row.style.transform = 'translateX(-100%)';
+                    row.style.opacity = '0';
+                    setTimeout(() => {
+                        row.remove();
+                        updateRowNumbers();
+                        
+                        // Clean up row state
+                        delete rowUsernameState[rowId];
+                    }, 300);
+                }
+            };
+            
+            // Update row numbers after removal
+            function updateRowNumbers() {
+                const rows = document.querySelectorAll('.username-row');
+                rows.forEach((row, index) => {
+                    const header = row.querySelector('h3');
+                    if (header) {
+                        header.textContent = `UPI Handle Request #${index + 1}`;
+                    }
+                });
+            }
+            
+            // Validate trademark name
+            function validateTrademark(name) {
+                return name.length >= 6;
+            }
+            
+            // Show toast notification
+            function showToast(message, type = 'info') {
+                const toast = document.getElementById('toast');
+                const toastMessage = document.getElementById('toastMessage');
+                
+                toastMessage.textContent = message;
+                
+                // Set toast color based on type
+                if (type === 'success') {
+                    toast.className = 'fixed bottom-5 right-5 bg-green-600 text-white py-3 px-5 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 z-50';
+                } else if (type === 'error') {
+                    toast.className = 'fixed bottom-5 right-5 bg-red-600 text-white py-3 px-5 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 z-50';
+                } else {
+                    toast.className = 'fixed bottom-5 right-5 bg-gray-800 text-white py-3 px-5 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 z-50';
+                }
+                
+                toast.classList.remove('opacity-0');
+                toast.classList.add('opacity-100');
+                
+                setTimeout(() => {
+                    toast.classList.remove('opacity-100');
+                    toast.classList.add('opacity-0');
+                }, 4000);
+            }
+            
+            // Event listeners
+            const useTradeNameToggle = document.getElementById('useTradeNameToggle');
+            const toggleLabel = document.getElementById('toggleLabel');
+            const tradeNameFields = document.getElementById('tradeNameFields');
+            const tradeName = document.getElementById('tradeName');
+            const trademarkRegNumber = document.getElementById('trademarkRegNumber');
+            
+            useTradeNameToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    toggleLabel.textContent = 'Yes';
+                    toggleLabel.classList.add('text-blue-600', 'font-semibold');
+                    toggleLabel.classList.remove('text-gray-600');
+                    tradeNameFields.classList.remove('hidden');
+                    tradeNameFields.classList.add('fade-in');
+                    tradeName.required = true;
+                    trademarkRegNumber.required = true;
+                } else {
+                    toggleLabel.textContent = 'No';
+                    toggleLabel.classList.remove('text-blue-600', 'font-semibold');
+                    toggleLabel.classList.add('text-gray-600');
+                    tradeNameFields.classList.add('hidden');
+                    tradeName.required = false;
+                    trademarkRegNumber.required = false;
+                    tradeName.value = '';
+                    trademarkRegNumber.value = '';
+                }
+            });
+            
+            // Add more rows
+            document.getElementById('addRowButton').addEventListener('click', function() {
+                rowCounter++;
+                const container = document.getElementById('usernameRowsContainer');
+                const newRow = createUsernameRow(rowCounter, true);
+                container.appendChild(newRow);
+                
+                // Scroll to the new row
+                setTimeout(() => {
+                    newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+            });
+              // Form submission
+            document.getElementById('upiRequestForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Validate PAN
+                const panInput = document.getElementById('panNumber');
+                const panValue = panInput.value.trim().toUpperCase();
+                if (!validatePAN(panValue)) {
+                    showToast('Please enter a valid PAN number (e.g., ABCDE1234F)', 'error');
+                    panInput.focus();
+                    panInput.classList.add('input-error');
+                    return;
+                } else {
+                    panInput.classList.remove('input-error');
+                    panInput.value = panValue; // Set uppercase value
+                }
+                
+                // Validate trademark if toggle is on
+                if (useTradeNameToggle.checked) {
+                    const tradeNameValue = tradeName.value.trim();
+                    if (!validateTrademark(tradeNameValue)) {
+                        showToast('Trademark name must be at least 6 characters long', 'error');
+                        tradeName.focus();
+                        tradeName.classList.add('input-error');
+                        return;
+                    }
+                }
+                
+                // Validate all username rows
+                const rows = document.querySelectorAll('.username-row');
+                let isValid = true;
+                let invalidRow = null;
+                
+                for (let row of rows) {
+                    const username = row.querySelector('.username-input').value.trim();
+                    const accountNumber = row.querySelector('.account-input').value.trim();
+                    const ifsc = row.querySelector('.ifsc-input').value.trim();
+                    const handle = row.querySelector('.handle-select').value;
+                    
+                    if (!username || !accountNumber || !ifsc || !handle) {
+                        isValid = false;
+                        invalidRow = row;
+                        showToast('Please fill all required fields in all UPI handle requests', 'error');
+                        break;
+                    }
+                    
+                    if (!validateIFSC(ifsc)) {
+                        isValid = false;
+                        invalidRow = row;
+                        showToast('Please enter valid IFSC codes', 'error');
+                        break;
+                    }
+                }
+                
+                if (!isValid && invalidRow) {
+                    invalidRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return;
+                }
+                  if (isValid) {
+                    // Collect form data
+                    const formData = {
+                        entityName: document.getElementById('entityName').value.trim(),
+                        registrationNumber: document.getElementById('registrationNumber').value.trim(),
+                        panNumber: document.getElementById('panNumber').value.trim(),
+                        categoryCode: document.getElementById('categoryCode').value.trim(),
+                        useTradeNameAsUsername: useTradeNameToggle.checked,
+                        tradeName: useTradeNameToggle.checked ? tradeName.value.trim() : null,
+                        trademarkRegNumber: useTradeNameToggle.checked ? trademarkRegNumber.value.trim() : null,
+                        requestDateTime: new Date().toISOString(),
+                        upiRequests: []
+                    };                      rows.forEach(row => {
+                        const username = row.querySelector('.username-input').value.trim();
+                        const optionalParamInput = row.querySelector('.optional-param-input');
+                        const enableOptionalCheckbox = row.querySelector('.enable-optional-checkbox');
+                        const optionalParam = enableOptionalCheckbox.checked ? optionalParamInput.value.trim() : '';
+                        const pspSelect = row.querySelector('.psp-select');
+                        const enablePspCheckbox = row.querySelector('.enable-psp-checkbox');
+                        const selectedBankName = enablePspCheckbox.checked ? pspSelect.value : '';
+                        const accountNumber = row.querySelector('.account-input').value.trim();
+                        const ifsc = row.querySelector('.ifsc-input').value.trim();
+                        const handle = row.querySelector('.handle-select').value;
+                        const categoryCode = formData.categoryCode;
+                        
+                        // Build complete UPI ID: username[.optional].category.handle
+                        let fullUpiId = username;
+                        if (optionalParam) {
+                            fullUpiId += '.' + optionalParam;
+                        }
+                        fullUpiId += '.' + categoryCode + handle;
+                        
+                        formData.upiRequests.push({
+                            username: username,
+                            optionalParameter: optionalParam,
+                            paymentServiceProvider: selectedBankName,
+                            usePaymentServiceProvider: enablePspCheckbox.checked,
+                            accountNumber: accountNumber,
+                            ifsc: ifsc,
+                            handle: handle,
+                            fullUpiId: fullUpiId
+                        });
+                    });
+                    
+                    // Here you would typically send the data to a server
+                    console.log('Form Data:', formData);
+                    showToast('UPI Handle request submitted successfully!', 'success');
+                    
+                    // Reset form after a delay
+                    setTimeout(() => {
+                        this.reset();
+                        useTradeNameToggle.checked = false;
+                        toggleLabel.textContent = 'No';
+                        toggleLabel.classList.remove('text-blue-600', 'font-semibold');
+                        toggleLabel.classList.add('text-gray-600');
+                        tradeNameFields.classList.add('hidden');
+                        
+                        // Reset rows
+                        document.getElementById('usernameRowsContainer').innerHTML = '';
+                        rowCounter = 0;
+                        rowUsernameState = {};
+                        bankUsernames = {};
+                        const initialRow = createUsernameRow(0);
+                        document.getElementById('usernameRowsContainer').appendChild(initialRow);
+                    }, 2000);
+                }            });
+            
+            // PAN validation
+            const panNumber = document.getElementById('panNumber');
+            panNumber.addEventListener('input', function() {
+                const value = this.value.trim().toUpperCase();
+                this.value = value; // Auto-convert to uppercase
+                this.classList.remove('input-error', 'input-success');
+                
+                if (value && validatePAN(value)) {
+                    this.classList.add('input-success');
+                    this.setCustomValidity('');
+                } else if (value) {
+                    this.classList.add('input-error');
+                    this.setCustomValidity('Enter valid PAN format (5 letters, 4 digits, 1 letter)');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+            
+            // Trademark validation
+            tradeName.addEventListener('input', function() {
+                const value = this.value.trim();
+                this.classList.remove('input-error', 'input-success');
+                
+                if (value && validateTrademark(value)) {
+                    this.classList.add('input-success');
+                    this.setCustomValidity('');
+                } else if (value) {
+                    this.classList.add('input-error');
+                    this.setCustomValidity('Trademark name must be at least 6 characters long');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+            
+            // Initialize
+            loadUpiHandles().then(() => {
+                // Add initial row
+                const initialRow = createUsernameRow(0);
+                document.getElementById('usernameRowsContainer').appendChild(initialRow);
+                showToast('UPI Handle Request Portal loaded successfully');
+            });
+        });
+    </script>
+</body>
+<script>
+  // Store the content of your UPI_handles.xml file here
+  const upiHandlesXmlData = `
+<UpiHandles xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<list>
+		<bank>hdfc</bank>
+		<handle>@validhdfc</handle>
+		<full_bank_name>HDFC Bank</full_bank_name>
+	</list>
+	<list>
+		<bank>yesb</bank>
+		<handle>@validyes</handle>
+		<full_bank_name>YES Bank</full_bank_name>
+	</list>
+	<list>
+		<bank>yesb</bank>
+		<handle>@validybl</handle>
+		<full_bank_name>YES Bank</full_bank_name>
+	</list>
+	<list>
+		<bank>icic</bank>
+		<handle>@validicici</handle>
+		<full_bank_name>ICICI Bank</full_bank_name>
+	</list>
+</UpiHandles>
+  `;
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // ... rest of your javascript code
+</html>

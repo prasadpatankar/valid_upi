@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPI Handle Verification Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .status-confirmed {
+            background-color: #D1FAE5;
+            color: #065F46;
+            border: 1px solid #6EE7B7;
+        }
+        .status-rejected {
+            background-color: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #FCA5A5;
+        }
+        .status-pending {
+            background-color: #FEF3C7;
+            color: #92400E;
+            border: 1px solid #FDE68A;
+        }
+        .status-submitted {
+            background-color: #E0E7FF;
+            color: #3730A3;
+            border: 1px solid #A5B4FC;
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        .modal { transition: opacity 0.25s ease; }
+        .modal-active { overflow-x: hidden; overflow-y: auto; }
+        .entity-card {
+            transition: all 0.2s ease-in-out;
+        }
+        .entity-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .entity-expanded {
+            border-color: #3B82F6;
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.1), 0 10px 10px -5px rgba(59, 130, 246, 0.04);
+        }
+        .filter-button {
+            transition: all 0.2s ease;
+        }
+        .filter-button.active {
+            box-shadow: 0 0 0 2px white, 0 0 0 4px currentColor;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-700 via-blue-800 to-gray-900 min-h-screen p-4 selection:bg-blue-500 selection:text-white">
+
+    <div class="w-full max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="bg-white shadow-2xl rounded-xl overflow-hidden mb-6">
+            <div class="bg-blue-600 p-6 text-white">
+                <h1 class="text-3xl font-bold text-center">UPI Handle Verification Portal</h1>
+                <p class="text-center text-blue-200 mt-1">SEBI Registered Intermediaries - Centralized Request Management</p>
+            </div>
+            
+            <!-- Summary Statistics -->
+            <div class="p-6 bg-blue-50 border-b border-gray-200">
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-blue-600" id="totalEntities">0</div>
+                        <div class="text-sm text-gray-600">Entities</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-amber-600" id="totalPending">0</div>
+                        <div class="text-sm text-gray-600">Pending</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600" id="totalConfirmed">0</div>
+                        <div class="text-sm text-gray-600">Confirmed</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-red-600" id="totalRejected">0</div>
+                        <div class="text-sm text-gray-600">Rejected</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-purple-600" id="totalSubmitted">0</div>
+                        <div class="text-sm text-gray-600">Submitted</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="p-6 bg-gray-50 flex flex-wrap gap-3 justify-between items-center">
+                <div class="flex flex-wrap gap-3">
+                    <button id="expandAllButton" class="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors">
+                        Expand All
+                    </button>
+                    <button id="collapseAllButton" class="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                        Collapse All
+                    </button>
+                    <button id="confirmAllButton" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors" disabled>
+                        Confirm All Pending
+                    </button>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <button id="downloadCsvButton" class="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Download CSV
+                    </button>
+                    <button id="viewSummaryButton" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+                        View Summary
+                    </button>
+                    <button id="submitAllButton" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors" disabled>
+                        Submit All Confirmed
+                    </button>
+                </div>
+            </div>
+              <!-- Search Field -->
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                <div class="max-w-md mx-auto">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm" 
+                            placeholder="Search by entity name, entity ID, PAN, UPI handle, account number, or IFSC..."
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="px-6 py-3 bg-blue-50 border-t border-gray-200 flex flex-wrap gap-2 justify-center items-center">
+                <div class="text-sm font-medium text-gray-500 mr-2">Filter by status:</div>
+                <button id="filterAll" class="filter-button px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg hover:bg-gray-100 transition-colors active">
+                    All Requests
+                </button>
+                <button id="filterPending" class="filter-button px-4 py-2 text-sm font-medium text-amber-600 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors">
+                    Pending
+                </button>
+                <button id="filterConfirmed" class="filter-button px-4 py-2 text-sm font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+                    Confirmed
+                </button>
+                <button id="filterRejected" class="filter-button px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
+                    Rejected
+                </button>
+                <button id="filterSubmitted" class="filter-button px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                    Submitted
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="bg-white rounded-xl shadow-lg p-8 text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h3 class="text-lg font-medium text-gray-900">Loading Requests...</h3>
+            <p class="text-sm text-gray-500">Please wait while we fetch the verification requests.</p>
+        </div>        <!-- Entities Container -->
+        <div id="entitiesContainer" class="hidden space-y-4">
+        </div>
+
+        <!-- Pagination Controls -->
+        <div id="paginationContainer" class="hidden mt-6 bg-white rounded-xl shadow-lg p-4">
+            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <!-- Page Info -->
+                <div class="text-sm text-gray-600">
+                    <span id="pageInfo">Showing 0 - 0 of 0 entities</span>
+                </div>
+                
+                <!-- Pagination Buttons -->
+                <div class="flex items-center space-x-2">
+                    <button id="firstPageBtn" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                        First
+                    </button>
+                    <button id="prevPageBtn" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Previous
+                    </button>
+                    
+                    <!-- Page Numbers -->
+                    <div id="pageNumbers" class="flex items-center space-x-1">
+                        <!-- Dynamic page numbers will be inserted here -->
+                    </div>
+                    
+                    <button id="nextPageBtn" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Next
+                    </button>
+                    <button id="lastPageBtn" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Last
+                    </button>
+                </div>
+                
+                <!-- Items per page selector -->
+                <div class="flex items-center space-x-2">
+                    <label for="itemsPerPage" class="text-sm text-gray-600">Items per page:</label>
+                    <select id="itemsPerPage" class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- No Data State -->
+        <div id="noDataState" class="hidden bg-white rounded-xl shadow-lg p-8 text-center">
+            <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No Requests Found</h3>
+            <p class="text-sm text-gray-500" id="noDataMessage">There are no UPI verification requests at this time.</p>
+        </div>
+    </div>
+
+    <!-- Summary Modal -->
+    <div id="summaryModal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 opacity-0 pointer-events-none">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6 transform transition-all scale-95">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-semibold text-gray-800">Verification Summary</h3>
+                <button id="closeSummaryModalButton" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="summaryContent" class="max-h-96 overflow-y-auto space-y-4"></div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button id="downloadSummaryCsvButton" class="px-4 py-2 text-sm font-medium text-purple-600 bg-purple-100 rounded-md hover:bg-purple-200">
+                    Download Summary CSV
+                </button>
+                <button id="finalSubmitFromSummaryButton" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700">
+                    Submit All Confirmed
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white py-3 px-5 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 z-50">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>        document.addEventListener('DOMContentLoaded', () => {
+            // --- GLOBAL STATE ---
+            let allRequests = [];
+            let expandedEntities = new Set();
+            let currentFilter = 'all'; // Default filter: show all requests
+            let currentPage = 1;
+            let itemsPerPage = 10;
+            let searchQuery = '';
+
+            // --- DOM ELEMENTS ---
+            const loadingState = document.getElementById('loadingState');
+            const entitiesContainer = document.getElementById('entitiesContainer');
+            const noDataState = document.getElementById('noDataState');
+            const noDataMessage = document.getElementById('noDataMessage');
+            
+            // Search and pagination elements
+            const searchInput = document.getElementById('searchInput');
+            const paginationContainer = document.getElementById('paginationContainer');
+            const pageInfo = document.getElementById('pageInfo');
+            const pageNumbers = document.getElementById('pageNumbers');
+            const firstPageBtn = document.getElementById('firstPageBtn');
+            const prevPageBtn = document.getElementById('prevPageBtn');
+            const nextPageBtn = document.getElementById('nextPageBtn');
+            const lastPageBtn = document.getElementById('lastPageBtn');
+            const itemsPerPageSelect = document.getElementById('itemsPerPage');
+            
+            // Statistics
+            const totalEntities = document.getElementById('totalEntities');
+            const totalPending = document.getElementById('totalPending');
+            const totalConfirmed = document.getElementById('totalConfirmed');
+            const totalRejected = document.getElementById('totalRejected');
+            const totalSubmitted = document.getElementById('totalSubmitted');
+            
+            // Action buttons
+            const expandAllButton = document.getElementById('expandAllButton');
+            const collapseAllButton = document.getElementById('collapseAllButton');
+            const confirmAllButton = document.getElementById('confirmAllButton');
+            const downloadCsvButton = document.getElementById('downloadCsvButton');
+            const submitAllButton = document.getElementById('submitAllButton');
+            const viewSummaryButton = document.getElementById('viewSummaryButton');
+            
+            // Modals
+            const summaryModal = document.getElementById('summaryModal');
+            const closeSummaryModalButton = document.getElementById('closeSummaryModalButton');
+            const summaryContent = document.getElementById('summaryContent');
+            const finalSubmitFromSummaryButton = document.getElementById('finalSubmitFromSummaryButton');
+            const downloadSummaryCsvButton = document.getElementById('downloadSummaryCsvButton');
+            
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+
+            // Filter buttons
+            const filterAll = document.getElementById('filterAll');
+            const filterPending = document.getElementById('filterPending');
+            const filterConfirmed = document.getElementById('filterConfirmed');
+            const filterRejected = document.getElementById('filterRejected');
+            const filterSubmitted = document.getElementById('filterSubmitted');
+
+            // --- DATA LOADING & PARSING ---
+            async function loadAndParseRequests() {
+                try {
+                    loadingState.classList.remove('hidden');
+                    noDataState.classList.add('hidden');
+                    entitiesContainer.classList.add('hidden');
+
+                    // Directly use the XML data from the variable instead of fetching a file.
+                    const xmlText = xmlData;
+
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(xmlText, "application/xml");
+
+                    if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
+                        throw new Error("Error parsing XML. Please check the XML file format.");
+                    }
+                    
+                    const requestNodes = xmlDoc.querySelectorAll('Request');
+                    allRequests = Array.from(requestNodes).map((node, index) => {
+                        const handles = Array.from(node.querySelectorAll('Handle')).map((handleNode, handleIndex) => {
+                            const upiIdNode = handleNode.querySelector('UpiId');
+                            const accountNumberNode = handleNode.querySelector('AccountNumber');
+                            const ifscNode = handleNode.querySelector('IFSC');
+
+                            return {
+                                id: `${index}-${handleIndex}`,
+                                upiId: upiIdNode ? upiIdNode.textContent.trim() : '',
+                                accountNumber: accountNumberNode ? accountNumberNode.textContent.trim() : '',
+                                ifsc: ifscNode ? ifscNode.textContent.trim() : '',
+                                status: 'pending', // Default status
+                                reason: null,
+                                timestamp: new Date().toISOString() // Timestamp of when it's loaded/processed by the script
+                            };
+                        });
+                          return {
+                            entityId: node.querySelector('entityId')?.textContent || `MISSING_ID_${index}`,
+                            entityName: node.querySelector('entityName')?.textContent || `Unknown Entity ${index + 1}`,
+                            pan: node.querySelector('pan')?.textContent || '',
+                            receivedDateTime: node.querySelector('receivedDateTime')?.textContent || new Date().toISOString(),
+                            handles: handles
+                        };
+                    });
+                    
+                    renderMainView();
+                } catch (error) {
+                    console.error('Error loading or parsing XML:', error);
+                    loadingState.classList.add('hidden');
+                    entitiesContainer.innerHTML = ''; // Clear any existing entities
+                    entitiesContainer.classList.add('hidden');
+                    noDataState.classList.remove('hidden');
+                    // Display a more informative error message in the noDataState element
+                    noDataState.innerHTML = `
+                        <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+                            <svg class="mx-auto h-16 w-16 text-red-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <h3 class="text-lg font-medium text-red-700 mb-2">Failed to Load Verification Requests</h3>
+                            <p class="text-sm text-gray-600 mb-1"><strong>Error:</strong> ${error.message}</p>
+                            <p class="text-sm text-gray-500">Please ensure the 'requests.xml' file is correctly formatted and accessible in the same directory.</p>
+                            <button onclick="location.reload()" class="mt-4 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
+                                Try Reloading
+                            </button>
+                        </div>
+                    `;
+                }
+            }            // --- VIEW RENDERING ---
+            function renderMainView() {
+                loadingState.classList.add('hidden');
+                
+                if (allRequests.length === 0) {
+                    noDataState.classList.remove('hidden');
+                    paginationContainer.classList.add('hidden');
+                    return;
+                }
+                
+                entitiesContainer.classList.remove('hidden');
+                renderEntities();
+                updateStatistics();
+                updateActionButtons();
+            }
+
+            function renderEntities() {
+                entitiesContainer.innerHTML = '';
+                
+                // Apply search filter first
+                let filteredRequests = applySearchFilter(allRequests, searchQuery);
+                
+                // Apply status filter
+                filteredRequests = filterRequests(filteredRequests, currentFilter);
+                
+                if (filteredRequests.length === 0) {
+                    noDataState.classList.remove('hidden');
+                    entitiesContainer.classList.add('hidden');
+                    paginationContainer.classList.add('hidden');
+                    
+                    if (searchQuery) {
+                        noDataMessage.textContent = `No entities found matching "${searchQuery}"`;
+                    } else {
+                        noDataMessage.textContent = currentFilter === 'all' 
+                            ? 'There are no UPI verification requests at this time.'
+                            : `No ${currentFilter} requests found. Try selecting a different filter.`;
+                    }
+                    return;
+                }
+                
+                noDataState.classList.add('hidden');
+                entitiesContainer.classList.remove('hidden');
+                
+                // Calculate pagination
+                const totalItems = filteredRequests.length;
+                const totalPages = Math.ceil(totalItems / itemsPerPage);
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+                const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
+                
+                // Render paginated entities
+                paginatedRequests.forEach(request => {
+                    const receivedDate = new Date(request.receivedDateTime);
+                    const formattedDate = receivedDate.toLocaleString('en-IN', { 
+                        dateStyle: 'medium', 
+                        timeStyle: 'short' 
+                    });
+                    
+                    const pendingCount = request.handles.filter(h => h.status === 'pending').length;
+                    const confirmedCount = request.handles.filter(h => h.status === 'confirmed').length;
+                    const rejectedCount = request.handles.filter(h => h.status === 'rejected').length;
+                    const submittedCount = request.handles.filter(h => h.status === 'submitted').length;
+                    
+                    const isExpanded = expandedEntities.has(request.entityId);
+                    
+                    const entityCard = document.createElement('div');
+                    entityCard.className = `entity-card bg-white rounded-xl shadow-lg overflow-hidden ${isExpanded ? 'entity-expanded' : ''}`;
+                    
+                    entityCard.innerHTML = `
+                        <!-- Entity Header -->
+                        <div class="p-6 border-b border-gray-200 cursor-pointer" onclick="toggleEntity('${request.entityId}')">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <h3 class="text-xl font-semibold text-blue-700 mb-2">${request.entityName}</h3>                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                        <div>
+                                            <span class="text-gray-500">Entity ID:</span>
+                                            <div class="font-medium">${request.entityId}</div>
+                                        </div>
+                                        <div>
+                                            <span class="text-gray-500">PAN:</span>
+                                            <div class="font-medium">${request.pan || 'Not Available'}</div>
+                                        </div>
+                                        <div>
+                                            <span class="text-gray-500">Received:</span>
+                                            <div class="font-medium">${formattedDate}</div>
+                                        </div>
+                                        <div>
+                                            <span class="text-gray-500">Total UPIs:</span>
+                                            <div class="font-medium">${request.handles.length}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-4 ml-6">
+                                    <div class="text-center">
+                                        <div class="text-lg font-bold text-amber-600">${pendingCount}</div>
+                                        <div class="text-xs text-gray-500">Pending</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-lg font-bold text-green-600">${confirmedCount}</div>
+                                        <div class="text-xs text-gray-500">Confirmed</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-lg font-bold text-red-600">${rejectedCount}</div>
+                                        <div class="text-xs text-gray-500">Rejected</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-lg font-bold text-purple-600">${submittedCount}</div>
+                                        <div class="text-xs text-gray-500">Submitted</div>
+                                    </div>
+                                    <svg class="w-5 h-5 text-gray-400 transform transition-transform ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Entity Actions -->
+                        <div class="px-6 py-3 bg-gray-50 border-b border-gray-200 flex flex-wrap gap-2 justify-between items-center">
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="confirmAllForEntity('${request.entityId}')" class="px-3 py-1 text-xs font-medium text-green-600 bg-green-100 rounded hover:bg-green-200 transition-colors" ${pendingCount === 0 ? 'disabled' : ''}>
+                                    Confirm All (${pendingCount})
+                                </button>
+                                <button onclick="rejectAllForEntity('${request.entityId}')" class="px-3 py-1 text-xs font-medium text-red-600 bg-red-100 rounded hover:bg-red-200 transition-colors" ${pendingCount === 0 ? 'disabled' : ''}>
+                                    Reject All (${pendingCount})
+                                </button>
+                            </div>
+                            <button onclick="downloadEntityCsv('${request.entityId}')" class="px-3 py-1 text-xs font-medium text-purple-600 bg-purple-100 rounded hover:bg-purple-200 transition-colors">
+                                Download CSV
+                            </button>
+                        </div>
+                        
+                        <!-- UPI Handles Table -->
+                        <div class="entity-details ${isExpanded ? 'block' : 'hidden'}">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-blue-50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">S.No.</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">UPI Handle</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">Account Number</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">IFSC</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-blue-700 uppercase tracking-wider">Status</th>
+                                            <th class="px-4 py-3 text-center text-xs font-medium text-blue-700 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        ${request.handles.map((handle, index) => {
+                                            let statusClass = 'status-pending';
+                                            let statusText = 'Pending';
+                                            if (handle.status === 'confirmed') { statusClass = 'status-confirmed'; statusText = 'Confirmed'; }
+                                            else if (handle.status === 'rejected') { statusClass = 'status-rejected'; statusText = 'Rejected'; }
+                                            else if (handle.status === 'submitted') { statusClass = 'status-submitted'; statusText = 'Submitted'; }
+                                            
+                                            return `
+                                                <tr class="${handle.status === 'pending' ? 'hover:bg-gray-50' : ''}">
+                                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${index + 1}</td>
+                                                    <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">${handle.upiId}</td>
+                                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">${handle.accountNumber}</td>
+                                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">${handle.ifsc}</td>
+                                                    <td class="px-4 py-3 whitespace-nowrap">
+                                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
+                                                            ${statusText}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-4 py-3 whitespace-nowrap text-center text-sm font-medium space-x-2">
+                                                        ${handle.status === 'pending' ? `
+                                                            <button onclick="confirmHandle('${handle.id}', '${request.entityId}')" class="text-green-600 hover:text-green-800 font-semibold py-1 px-2 rounded border border-green-500 hover:bg-green-50 text-xs">Confirm</button>
+                                                            <button onclick="rejectHandle('${handle.id}', '${request.entityId}')" class="text-red-600 hover:text-red-800 font-semibold py-1 px-2 rounded border border-red-500 hover:bg-red-50 text-xs">Reject</button>
+                                                        ` : `<span class="text-gray-500 italic text-xs">Processed</span>`}
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                    
+                    entitiesContainer.appendChild(entityCard);
+                });
+                
+                // Update pagination controls
+                updatePaginationControls(totalItems, totalPages);
+            }
+            
+            // Apply search filter to requests
+            function applySearchFilter(requests, query) {
+                if (!query.trim()) {
+                    return requests;
+                }
+                  const lowerQuery = query.toLowerCase();
+                return requests.filter(request => {
+                    // Search in entity name
+                    if (request.entityName.toLowerCase().includes(lowerQuery)) {
+                        return true;
+                    }
+                    
+                    // Search in entity ID (registration number)
+                    if (request.entityId.toLowerCase().includes(lowerQuery)) {
+                        return true;
+                    }
+                    
+                    // Search in PAN
+                    if (request.pan && request.pan.toLowerCase().includes(lowerQuery)) {
+                        return true;
+                    }
+                    
+                    // Search in UPI handles data (account numbers, UPI IDs)
+                    return request.handles.some(handle => {
+                        return handle.upiId.toLowerCase().includes(lowerQuery) ||
+                               (handle.accountNumber && handle.accountNumber.toLowerCase().includes(lowerQuery)) ||
+                               (handle.ifsc && handle.ifsc.toLowerCase().includes(lowerQuery));
+                    });
+                });
+            }
+            
+            // Update pagination controls
+            function updatePaginationControls(totalItems, totalPages) {
+                if (totalItems === 0) {
+                    paginationContainer.classList.add('hidden');
+                    return;
+                }
+                
+                paginationContainer.classList.remove('hidden');
+                
+                // Update page info
+                const startItem = (currentPage - 1) * itemsPerPage + 1;
+                const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+                pageInfo.textContent = `Showing ${startItem} - ${endItem} of ${totalItems} entities`;
+                
+                // Update button states
+                firstPageBtn.disabled = currentPage === 1;
+                prevPageBtn.disabled = currentPage === 1;
+                nextPageBtn.disabled = currentPage === totalPages;
+                lastPageBtn.disabled = currentPage === totalPages;
+                
+                // Generate page numbers
+                pageNumbers.innerHTML = '';
+                const maxVisiblePages = 5;
+                let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                
+                if (endPage - startPage + 1 < maxVisiblePages) {
+                    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                }
+                
+                for (let i = startPage; i <= endPage; i++) {
+                    const pageBtn = document.createElement('button');
+                    pageBtn.className = `px-3 py-2 text-sm font-medium border rounded-lg ${
+                        i === currentPage 
+                            ? 'text-white bg-blue-600 border-blue-600' 
+                            : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-50'
+                    }`;
+                    pageBtn.textContent = i;
+                    pageBtn.onclick = () => goToPage(i);
+                    pageNumbers.appendChild(pageBtn);
+                }
+            }
+            
+            // Pagination functions
+            function goToPage(page) {
+                currentPage = page;
+                renderEntities();
+            }
+            
+            function goToFirstPage() {
+                goToPage(1);
+            }
+            
+            function goToPreviousPage() {
+                if (currentPage > 1) {
+                    goToPage(currentPage - 1);
+                }
+            }
+            
+            function goToNextPage() {
+                const filteredRequests = applySearchFilter(filterRequests(allRequests, currentFilter), searchQuery);
+                const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+                if (currentPage < totalPages) {
+                    goToPage(currentPage + 1);
+                }
+            }
+            
+            function goToLastPage() {
+                const filteredRequests = applySearchFilter(filterRequests(allRequests, currentFilter), searchQuery);
+                const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+                goToPage(totalPages);
+            }
+            
+            function changeItemsPerPage() {
+                itemsPerPage = parseInt(itemsPerPageSelect.value);
+                currentPage = 1; // Reset to first page when changing items per page
+                renderEntities();
+            }
+            
+            // Filter requests based on current filter
+            function filterRequests(requests, filter) {
+                if (filter === 'all') {
+                    return requests;
+                }
+                
+                // For status filters, return requests that have at least one handle with the matching status
+                // But show all handles in the request, not just the filtered ones
+                return requests.filter(request => {
+                    return request.handles.some(h => h.status === filter);
+                });
+            }
+              // Set active filter button
+            function setActiveFilter(filter) {
+                // Remove active class from all filter buttons
+                [filterAll, filterPending, filterConfirmed, filterRejected, filterSubmitted].forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Add active class to the selected filter button
+                const filterButtonMap = {
+                    'all': filterAll,
+                    'pending': filterPending,
+                    'confirmed': filterConfirmed,
+                    'rejected': filterRejected,
+                    'submitted': filterSubmitted
+                };
+                
+                filterButtonMap[filter]?.classList.add('active');
+                
+                // Update current filter and reset to first page
+                currentFilter = filter;
+                currentPage = 1;
+                renderEntities();
+                
+                // Show toast notification
+                const filterNames = {
+                    'all': 'All Requests',
+                    'pending': 'Pending Requests',
+                    'confirmed': 'Confirmed Requests',
+                    'rejected': 'Rejected Requests',
+                    'submitted': 'Submitted Requests'
+                };
+                
+                showToast(`Filtering by: ${filterNames[filter]}`);
+            }
+
+            // --- STATISTICS & BUTTON UPDATES ---
+            function updateStatistics() {
+                let totalPendingCount = 0;
+                let totalConfirmedCount = 0;
+                let totalRejectedCount = 0;
+                let totalSubmittedCount = 0;
+                
+                allRequests.forEach(request => {
+                    totalPendingCount += request.handles.filter(h => h.status === 'pending').length;
+                    totalConfirmedCount += request.handles.filter(h => h.status === 'confirmed').length;
+                    totalRejectedCount += request.handles.filter(h => h.status === 'rejected').length;
+                    totalSubmittedCount += request.handles.filter(h => h.status === 'submitted').length;
+                });
+                
+                totalEntities.textContent = allRequests.length;
+                totalPending.textContent = totalPendingCount;
+                totalConfirmed.textContent = totalConfirmedCount;
+                totalRejected.textContent = totalRejectedCount;
+                totalSubmitted.textContent = totalSubmittedCount;
+            }
+
+            function updateActionButtons() {
+                const hasPending = allRequests.some(req => req.handles.some(h => h.status === 'pending'));
+                const hasConfirmed = allRequests.some(req => req.handles.some(h => h.status === 'confirmed'));
+                
+                confirmAllButton.disabled = !hasPending;
+                submitAllButton.disabled = !hasConfirmed;
+                finalSubmitFromSummaryButton.disabled = !hasConfirmed;
+                
+                if (!hasConfirmed) {
+                    submitAllButton.textContent = 'No Confirmed Items';
+                    submitAllButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+                    submitAllButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+                } else {
+                    submitAllButton.textContent = 'Submit All Confirmed';
+                    submitAllButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                    submitAllButton.classList.add('bg-green-600', 'hover:bg-green-700');
+                }
+            }
+
+            // --- GLOBAL FUNCTIONS FOR EVENT HANDLERS ---
+            window.toggleEntity = (entityId) => {
+                if (expandedEntities.has(entityId)) {
+                    expandedEntities.delete(entityId);
+                } else {
+                    expandedEntities.add(entityId);
+                }
+                renderEntities();
+            };            window.confirmAllForEntity = (entityId) => {
+                const request = allRequests.find(r => r.entityId === entityId);
+                if (!request) return;
+                
+                let confirmed = 0;
+                request.handles.forEach(handle => {
+                    if (handle.status === 'pending') {
+                        handle.status = 'confirmed';
+                        handle.reason = null;
+                        handle.timestamp = new Date().toISOString();
+                        confirmed++;
+                    }
+                });
+                
+                if (confirmed > 0) {
+                    renderEntities();
+                    updateStatistics();
+                    updateActionButtons();
+                    showToast(`Confirmed ${confirmed} UPI handles for ${request.entityName}`);
+                }
+            };
+
+            // Direct confirm function - no modal
+            window.confirmHandle = (handleId, entityId) => {
+                const request = allRequests.find(r => r.entityId === entityId);
+                if (!request) return;
+                
+                const handle = request.handles.find(h => h.id === handleId);
+                if (!handle || handle.status !== 'pending') return;
+                
+                handle.status = 'confirmed';
+                handle.reason = null;
+                handle.timestamp = new Date().toISOString();
+                
+                renderEntities();
+                updateStatistics();
+                updateActionButtons();
+                showToast(`${handle.upiId} has been confirmed`);
+            };
+
+            // Direct reject function - no modal, no reason required
+            window.rejectHandle = (handleId, entityId) => {
+                const request = allRequests.find(r => r.entityId === entityId);
+                if (!request) return;
+                
+                const handle = request.handles.find(h => h.id === handleId);
+                if (!handle || handle.status !== 'pending') return;
+                
+                handle.status = 'rejected';
+                handle.reason = 'Rejected';
+                handle.timestamp = new Date().toISOString();
+                
+                renderEntities();
+                updateStatistics();
+                updateActionButtons();
+                showToast(`${handle.upiId} has been rejected`);
+            };
+
+            window.rejectAllForEntity = (entityId) => {
+                const request = allRequests.find(r => r.entityId === entityId);
+                if (!request) return;
+                
+                let rejected = 0;
+                request.handles.forEach(handle => {
+                    if (handle.status === 'pending') {
+                        handle.status = 'rejected';
+                        handle.reason = 'Bulk rejection';
+                        handle.timestamp = new Date().toISOString();
+                        rejected++;
+                    }
+                });
+                
+                if (rejected > 0) {
+                    renderEntities();
+                    updateStatistics();
+                    updateActionButtons();
+                    showToast(`Rejected ${rejected} UPI handles for ${request.entityName}`);
+                }
+            };
+
+            window.downloadEntityCsv = (entityId) => {
+                const request = allRequests.find(r => r.entityId === entityId);
+                if (!request) return;
+                
+                downloadCsv([request], `upi_verification_${request.entityId}_${new Date().toISOString().split('T')[0]}.csv`);
+            };
+
+            // --- CSV DOWNLOAD FUNCTIONALITY ---
+            function downloadCsv(requestsData, filename) {
+                const csvData = [];
+                csvData.push(['Entity Name', 'Entity ID', 'PAN', 'Request Time', 'UPI Handle', 'Account Number', 'IFSC', 'Status', 'Processed Time']);
+                
+                requestsData.forEach(request => {
+                    request.handles.forEach(handle => {
+                        csvData.push([
+                            request.entityName,
+                            request.entityId,
+                            request.pan || '',
+                            new Date(request.receivedDateTime).toLocaleString('en-IN'),
+                            handle.upiId,
+                            handle.accountNumber || '',
+                            handle.ifsc || '',
+                            handle.status.charAt(0).toUpperCase() + handle.status.slice(1),
+                            handle.timestamp ? new Date(handle.timestamp).toLocaleString('en-IN') : ''
+                        ]);
+                    });                });
+                
+                const csvContent = csvData.map(row => 
+                    row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')
+                ).join('\n');
+                
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);                link.download = filename;
+                link.click();
+                URL.revokeObjectURL(link.href);
+            }
+
+            // --- EVENT LISTENERS ---
+            
+            // Search functionality
+            searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value;
+                currentPage = 1; // Reset to first page when searching
+                renderEntities();
+            });
+            
+            // Pagination event listeners
+            firstPageBtn.addEventListener('click', goToFirstPage);
+            prevPageBtn.addEventListener('click', goToPreviousPage);
+            nextPageBtn.addEventListener('click', goToNextPage);
+            lastPageBtn.addEventListener('click', goToLastPage);
+            itemsPerPageSelect.addEventListener('change', changeItemsPerPage);
+            
+            // Filter button event listeners
+            filterAll.addEventListener('click', () => setActiveFilter('all'));
+            filterPending.addEventListener('click', () => setActiveFilter('pending'));
+            filterConfirmed.addEventListener('click', () => setActiveFilter('confirmed'));
+            filterRejected.addEventListener('click', () => setActiveFilter('rejected'));
+            filterSubmitted.addEventListener('click', () => setActiveFilter('submitted'));
+
+            expandAllButton.addEventListener('click', () => {
+                allRequests.forEach(req => expandedEntities.add(req.entityId));
+                renderEntities();
+            });
+
+            collapseAllButton.addEventListener('click', () => {
+                expandedEntities.clear();
+                renderEntities();
+            });            confirmAllButton.addEventListener('click', () => {
+                if (confirmAllButton.disabled) return;
+                
+                if (!confirm('Are you sure you want to confirm ALL pending UPI handles from ALL entities?')) return;
+                
+                let totalConfirmed = 0;
+                allRequests.forEach(request => {
+                    request.handles.forEach(handle => {
+                        if (handle.status === 'pending') {
+                            handle.status = 'confirmed';
+                            handle.reason = null;
+                            handle.timestamp = new Date().toISOString();
+                            totalConfirmed++;
+                        }
+                    });
+                });
+                
+                if (totalConfirmed > 0) {
+                    renderEntities();
+                    updateStatistics();
+                    updateActionButtons();
+                    showToast(`Confirmed ${totalConfirmed} UPI handles across all entities`);
+                }
+            });
+
+            downloadCsvButton.addEventListener('click', () => {
+                downloadCsv(allRequests, `upi_verification_all_entities_${new Date().toISOString().split('T')[0]}.csv`);
+            });            submitAllButton.addEventListener('click', () => {
+                if (submitAllButton.disabled) return;
+                
+                let totalSubmitted = 0;
+                allRequests.forEach(request => {
+                    request.handles.forEach(handle => {
+                        if (handle.status === 'confirmed') {
+                            handle.status = 'submitted';
+                            handle.timestamp = new Date().toISOString();
+                            totalSubmitted++;
+                        }
+                    });
+                });
+                
+                if (totalSubmitted > 0) {
+                    renderEntities();
+                    updateStatistics();
+                    updateActionButtons();
+                    showToast(`Successfully submitted ${totalSubmitted} confirmed UPI handles`);
+                }
+            });
+
+            // Summary Modal
+            viewSummaryButton.addEventListener('click', () => {
+                summaryContent.innerHTML = '';
+                
+                allRequests.forEach(request => {
+                    const confirmed = request.handles.filter(h => h.status === 'confirmed');
+                    const rejected = request.handles.filter(h => h.status === 'rejected');
+                    const pending = request.handles.filter(h => h.status === 'pending');
+                    const submitted = request.handles.filter(h => h.status === 'submitted');
+                    
+                    if (confirmed.length > 0 || rejected.length > 0 || pending.length > 0 || submitted.length > 0) {
+                        summaryContent.innerHTML += `
+                            <div class="border rounded-lg p-4">
+                                <h4 class="text-lg font-semibold text-blue-700 mb-3">${request.entityName}</h4>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
+                                    <div class="text-center p-2 bg-amber-50 rounded">
+                                        <div class="font-bold text-amber-600">${pending.length}</div>
+                                        <div class="text-amber-700">Pending</div>
+                                    </div>
+                                    <div class="text-center p-2 bg-green-50 rounded">
+                                        <div class="font-bold text-green-600">${confirmed.length}</div>
+                                        <div class="text-green-700">Confirmed</div>
+                                    </div>
+                                    <div class="text-center p-2 bg-red-50 rounded">
+                                        <div class="font-bold text-red-600">${rejected.length}</div>
+                                        <div class="text-red-700">Rejected</div>
+                                    </div>
+                                    <div class="text-center p-2 bg-blue-50 rounded">
+                                        <div class="font-bold text-blue-600">${submitted.length}</div>
+                                        <div class="text-blue-700">Submitted</div>
+                                    </div>
+                                </div>
+                                ${rejected.length > 0 ? `
+                                    <div class="mt-2">
+                                        <h5 class="text-sm font-medium text-red-700 mb-1">Rejected UPIs:</h5>
+                                        <ul class="text-xs text-gray-600 list-disc list-inside">
+                                            ${rejected.map(h => `<li>${h.upiId} | Acc: ${h.accountNumber || 'N/A'} | IFSC: ${h.ifsc || 'N/A'}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    }
+                });
+                
+                if (!summaryContent.innerHTML) {
+                    summaryContent.innerHTML = '<p class="text-gray-600 text-center">No UPI handles have been processed yet.</p>';
+                }
+                
+                summaryModal.classList.remove('opacity-0', 'pointer-events-none');
+                summaryModal.classList.add('modal-active');
+            });
+
+            const closeSummaryModal = () => {
+                summaryModal.classList.add('opacity-0', 'pointer-events-none');
+                summaryModal.classList.remove('modal-active');
+            };
+
+            closeSummaryModalButton.addEventListener('click', closeSummaryModal);
+
+            downloadSummaryCsvButton.addEventListener('click', () => {
+                downloadCsv(allRequests, `upi_verification_summary_${new Date().toISOString().split('T')[0]}.csv`);
+                closeSummaryModal();
+            });
+
+            finalSubmitFromSummaryButton.addEventListener('click', () => {
+                submitAllButton.click();
+                closeSummaryModal();
+            });
+
+            // Global event listeners
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (summaryModal.classList.contains('modal-active')) closeSummaryModal();
+                }
+            });
+
+            // Toast notification
+            let toastTimeout;
+            function showToast(message) {
+                toastMessage.textContent = message;
+                toast.classList.remove('opacity-0');
+                toast.classList.add('opacity-100');
+                
+                clearTimeout(toastTimeout);
+                toastTimeout = setTimeout(() => {
+                    toast.classList.remove('opacity-100');
+                    toast.classList.add('opacity-0');
+                }, 4000);
+            }
+
+            // --- INITIALIZATION ---
+            loadAndParseRequests();
+        });
+    </script>
+</body>
+<script>
+  // Store your XML content inside these backticks
+  const xmlData = `
+<UpiRequests>
+    
+    <Request>
+        <entityName>ABC Broker Private Limited</entityName>
+        <entityId>INZ000012345</entityId>
+        <pan>ABCPL1234E</pan>
+        <receivedDateTime>2025-06-12T11:30:00Z</receivedDateTime>
+        <UpiHandles>
+            <Handle>
+                <UpiId>abcbroker.brk@validybl</UpiId>
+                <AccountNumber>12345678901234</AccountNumber>
+                <IFSC>VBLY0012345</IFSC>
+            </Handle>
+            <Handle>
+                <UpiId>abcbroker276.brk@validybl</UpiId>
+                <AccountNumber>23456789012345</AccountNumber>
+                <IFSC>VBLY0023456</IFSC>
+            </Handle>
+            <Handle>
+                <UpiId>abcbroker276.brk@validyes</UpiId>
+                <AccountNumber>34567890123456</AccountNumber>
+                <IFSC>YESB0000789</IFSC>
+            </Handle>
+        </UpiHandles>
+    </Request>
+    
+    <Request>
+        <entityName>XYZ Capital Services</entityName>
+        <entityId>INZ000067890</entityId>
+        <pan>XYZCS5678F</pan>
+        <receivedDateTime>2025-06-12T14:05:21Z</receivedDateTime>
+        <UpiHandles>
+            <Handle>
+                <UpiId>xyzcapital.inv@trustbank</UpiId>
+                <AccountNumber>45678901234567</AccountNumber>
+                <IFSC>TBNK0001234</IFSC>
+            </Handle>
+            <Handle>
+                <UpiId>trading.xyz@trustbank</UpiId>
+                <AccountNumber>56789012345678</AccountNumber>
+                <IFSC>TBNK0005678</IFSC>
+            </Handle>
+        </UpiHandles>
+    </Request>
+    
+    <Request>
+        <entityName>Growth Investments Corp</entityName>
+        <entityId>INZ000054321</entityId>
+        <pan>GRINC9012G</pan>        <receivedDateTime>2025-06-11T18:45:10Z</receivedDateTime>
+        <UpiHandles>
+            <Handle>
+                <UpiId>invest.growth@secureaxis</UpiId>
+                <AccountNumber>67890123456789</AccountNumber>
+                <IFSC>AXIS0007890</IFSC>
+            </Handle>
+            <Handle>
+                <UpiId>payments.growth@secureaxis</UpiId>
+                <AccountNumber>78901234567890</AccountNumber>
+                <IFSC>AXIS0008901</IFSC>
+            </Handle>
+            <Handle>
+                <UpiId>support.growth@secureaxis</UpiId>
+                <AccountNumber>89012345678901</AccountNumber>                <IFSC>AXIS0009012</IFSC>
+            </Handle>
+            <Handle>
+                <UpiId>grievance.growth@secureaxis</UpiId>
+                <AccountNumber>90123456789012</AccountNumber>
+                <IFSC>AXIS0000123</IFSC>
+            </Handle>
+        </UpiHandles>
+    </Request>
+
+</UpiRequests>
+  `;
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // ... rest of your javascript code
+</html>
